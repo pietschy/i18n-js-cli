@@ -1,5 +1,7 @@
 require "thor"
+require "yaml"
 require "i18n/js/cli/version"
+require "i18n/js/cli/exporter"
 
 module I18n
   module JS
@@ -23,9 +25,14 @@ module I18n
         type: :string,
         aliases: "-c"
       option :include,
-        desc: "The translation matchers (e.g. '*.date.*')",
+        desc: "The translation scopes that must be included",
         type: :array,
         aliases: "-i",
+        default: []
+      option :exclude,
+        desc: "The translation scopes that must be excluded",
+        type: :array,
+        aliases: "-e",
         default: []
       option :output_file,
         desc: "The output file path",
@@ -48,9 +55,28 @@ module I18n
         default: false
 
       def export
+        validate_require_path!
         validate_config_option!
         validate_config_path!
-        validate_require_path!
+
+        config =  if export_options[:config]
+                    YAML.load_file(export_options[:config])["translations"]
+                  else
+                    [{
+                      file: export_options[:output_file],
+                      only: export_options[:include],
+                      except: export_options[:exclude]
+                    }]
+                  end
+
+        config = config.map do |node|
+          node[:namespace] = export_options[:namespace]
+          node[:gzip] = export_options[:gzip]
+        end
+
+        require export_options[:require]
+        I18n::JS::CLI::Exporter.export(config)
+        exit 0
       end
 
       private
@@ -67,12 +93,18 @@ module I18n
 
       def validate_require_path!
         path = export_options[:require] || "config/environment.rb"
-        path = File.join(path, "config/environment.rb") if Dir.exist?(path)
+
+        if Dir.exist?(path)
+          dir_path = path
+          path = File.expand_path(File.join(path, "config/environment.rb"))
+          Dir.chdir dir_path
+        end
+
         export_options[:require] = File.expand_path(path)
 
         return if File.file?(path)
 
-        raise Error, "ERROR: --require must be a valid Rails directory or a file to be required; #{path} used."
+        raise Error, "ERROR: --require must be a valid Rails directory or a file to be required; #{export_options[:require]} used."
       end
 
       def validate_config_path!
@@ -83,7 +115,7 @@ module I18n
 
         return if File.file?(config)
 
-        raise Error, "ERROR: --config must be a valid file; #{config} used."
+        raise Error, "ERROR: --config must be a valid file; #{export_options[:config]} used."
       end
     end
   end
