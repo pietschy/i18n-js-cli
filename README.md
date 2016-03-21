@@ -1,15 +1,15 @@
-# I18n::Js::Cli
+# i18n-js-cli
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/i18n/js/cli`. To experiment with that code, run `bin/console` for an interactive prompt.
+Export translations to use with [i18n-js](https://github.com/fnando/i18-js).
 
-TODO: Delete this and the text above, and describe your gem
+![This project is under development and may not fully functional.](http://messages.hellobits.com/warning.svg?message=This%20project%20is%20under%20development%20and%20may%20not%20fully%20functional.)
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'i18n-js-cli'
+gem "i18n-js-cli"
 ```
 
 And then execute:
@@ -22,7 +22,45 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+This is the minimum command you can run:
+
+```
+$ i18njs export
+```
+
+This will use default configuration as following:
+
+- `--require` will be set to `./config/environment.rb`.
+- `--config` will be set to `./config/i18njs.yml`.
+
+Exported files will always have keys sorted and pretty print; you don't have to do anything. If you want to minify the output file, use another tool for this.
+
+### Configuration file
+
+You can define several files in a configuration file. You must specify the `file` output path and the scopes that will be exported.
+
+```yaml
+translations:
+  - file: 'app/assets/javascripts/locales/en.js'
+    only: 'en.*'
+
+  - file: 'app/assets/javascripts/locales/pt-BR.js'
+    only: 'pt-BR.*'
+
+  - file: 'app/assets/javascripts/locales/es.js'
+    only: 
+      - 'es.date.*'
+      - 'es.time.*'
+```
+
+You can also specify a list of scopes that shouldn't be included on the exported file through the `except` option. The following example includes everything but `pt-BR` translations.
+
+```yaml
+translations:
+  - file: 'app/assets/javascripts/locales/en.js'
+    only: '*'
+    except: 'pt-BR.*'
+```
 
 ## Development
 
@@ -34,8 +72,6 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/i18n-js-cli. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
-
 ## License
 
 The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
-
