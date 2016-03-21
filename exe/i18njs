@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+require "i18n/js/cli"
+I18n::JS::CLI.start
