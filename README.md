@@ -2,7 +2,7 @@
 
 Export translations to use with [i18n-js](https://github.com/fnando/i18-js).
 
-![This project is under development and may not fully functional.](http://messages.hellobits.com/warning.svg?message=This%20project%20is%20under%20development%20and%20may%20not%20fully%20functional.)
+![This project is under development and may not be fully functional.](http://messages.hellobits.com/warning.svg?message=This%20project%20is%20under%20development%20and%20may%20not%20be%20fully%20functional.)
 
 ## Installation
 
