@@ -35,11 +35,6 @@ module I18n
              desc: "The output file path",
              type: :string,
              aliases: "-o"
-      option :namespace,
-             desc: "The I18n namespace",
-             type: :string,
-             aliases: "-n",
-             default: "I18n"
       option :require,
              desc: "Location of Rails application with translations or file to require",
              type: :string,
@@ -49,12 +44,22 @@ module I18n
              desc: "Also generate .gz file for the exported translation",
              type: :boolean,
              default: false
+      option :module,
+             desc: "Specify the module system that will be used.",
+             type: :string,
+             default: "globals",
+             banner: "globals|amd|common"
+      option :module_name,
+             desc: "Specify the module name that will be used. For globals is the namespace. For AMD is the module name.",
+             type: :string,
+             default: "I18n"
 
       def export
         validate_require_path!
         validate_config_option!
         validate_config_path!
         validate_output_path!
+        validate_module_systems!
 
         require export_options[:require]
         I18n::JS::CLI::Exporter.export(prepare_to_export)
@@ -69,7 +74,9 @@ module I18n
         else
           [{
             file: export_options[:output_file],
-            only: export_options[:include]
+            only: export_options[:include],
+            module: export_options[:module],
+            module_name: export_options[:module_name]
           }]
         end
       end
@@ -86,15 +93,24 @@ module I18n
         @export_options ||= hash_with_indifferent_access({}.merge(options.dup))
       end
 
+      def validate_module_systems!
+        module_systems = %w[globals amd common]
+        module_system = export_options[:module]
+
+        return if module_systems.include?(module_system)
+        raise Error,
+              "ERROR: --module value is not supported (#{module_system.inspect})."
+      end
+
       def validate_config_option!
         if export_options[:config] && export_options[:include].any?
           raise Error,
-            "ERROR: --config and --include are mutually exclusive."
+                "ERROR: --config and --include are mutually exclusive."
         end
 
         if export_options[:config] && export_options[:output_file]
           raise Error,
-            "ERROR: --config and --output-file are mutually exclusive."
+                "ERROR: --config and --output-file are mutually exclusive."
         end
       end
 
@@ -111,7 +127,8 @@ module I18n
 
         return if File.file?(path)
 
-        raise Error, "ERROR: --require must be a valid Rails directory or a file to be required; #{export_options[:require]} used."
+        raise Error,
+              "ERROR: --require must be a valid Rails directory or a file to be required; #{export_options[:require]} used."
       end
 
       def validate_config_path!
@@ -130,7 +147,8 @@ module I18n
         return if export_options[:config] && File.file?(export_options[:config])
         return if export_options[:output_file]
 
-        raise Error, "ERROR: --output-file must be provided."
+        raise Error,
+              "ERROR: --output-file must be provided."
       end
 
       def hash_with_indifferent_access(hash)

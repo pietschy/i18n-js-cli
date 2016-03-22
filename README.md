@@ -22,7 +22,7 @@ Or install it yourself as:
 
 ## Usage
 
-This is the minimum command you can run:
+In a Rails project, this is the minimum command you can run:
 
 ```
 $ i18njs export
@@ -34,6 +34,17 @@ This will use default configuration as following:
 - `--config` will be set to `./config/i18njs.yml`.
 
 Exported files will always have keys sorted and pretty print; you don't have to do anything. If you want to minify the output file, use another tool for this.
+
+### CLI
+
+The `export` command has several options.
+
+- `--config`: The config file that will be used to export files. This the YAML containing your rules.
+- `--gzip`: Also export a `.gz` version of your translation file.
+- `--include`: Specify the scopes you want to include. For several scopes, just do something like `--include '*.date.*' '*.time.*' '*.number.*'`.
+- `--namespace`: You can use a different namespace for the translations. Useful when you can't use the global `I18n`.
+- `--output-file`: If you're not using a configuration file, you have to specify this option. It's the path of the output file. Existing file will be replaced.
+- `--require`: To load your translations, you have to specify a entry file that will be required.
 
 ### Configuration file
 
@@ -53,13 +64,14 @@ translations:
       - 'es.time.*'
 ```
 
-You can also specify a list of scopes that shouldn't be included on the exported file through the `except` option. The following example includes everything but `pt-BR` translations.
+You can specify the output namespace (globals) and module name (AMD).
 
 ```yaml
 translations:
   - file: 'app/assets/javascripts/locales/en.js'
-    only: '*'
-    except: 'pt-BR.*'
+    only: 'en.*'
+    module: amd
+    module_name: locales/en
 ```
 
 ## Development

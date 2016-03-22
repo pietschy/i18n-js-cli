@@ -20,12 +20,42 @@ module I18n
         def export
           set_config
           ensure_directory
-          contents = store_translations(item[:only])
+          contents = generate_contents
           create_file(contents)
           create_gzip(contents) if item[:gzip]
         end
 
         private
+
+        def generate_contents
+          contents = store_translations(item[:only])
+
+          case item[:module]
+          when "amd"
+            amd_module(contents)
+          when "common"
+            common_module(contents)
+          else
+            contents
+          end
+        end
+
+        def common_module(contents)
+          [
+            %[var I18n = require("i18n");],
+            %[module.exports = I18n;],
+            contents
+          ].join("\n")
+        end
+
+        def amd_module(contents)
+          [
+            %[define("#{item[:module_name]}", ["i18n"], function(I18n) {],
+            contents.lines.map {|line| "  #{line}" }.join(""),
+            %[  return I18n;],
+            %[});]
+          ].join("\n")
+        end
 
         def create_gzip(contents)
           Zlib::GzipWriter.open("#{item[:file]}.gz") do |file|
@@ -45,8 +75,14 @@ module I18n
 
         def set_config
           I18n::JS.defaults!
-          I18n::JS.json_encoder = ->(translations) { json_encoder(translations) }
-          I18n::JS.output_namespace = item[:namespace]
+          I18n::JS.output_namespace = item[:module_name] if globals?
+          I18n::JS.json_encoder = lambda do |translations|
+            json_encoder(translations)
+          end
+        end
+
+        def globals?
+          item[:module] == "globals"
         end
 
         def json_encoder(translations)
