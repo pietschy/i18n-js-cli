@@ -1,5 +1,7 @@
 require "thor"
 require "yaml"
+require "zlib"
+require "i18n-js"
 require "i18n/js/cli/version"
 require "i18n/js/cli/exporter"
 
@@ -21,37 +23,32 @@ module I18n
 
       desc "export", "Export translations files"
       option :config,
-        desc: "The config file that will be used to export files",
-        type: :string,
-        aliases: "-c"
+             desc: "The config file that will be used to export files",
+             type: :string,
+             aliases: "-c"
       option :include,
-        desc: "The translation scopes that must be included",
-        type: :array,
-        aliases: "-i",
-        default: []
-      option :exclude,
-        desc: "The translation scopes that must be excluded",
-        type: :array,
-        aliases: "-e",
-        default: []
+             desc: "The translation scopes that must be included",
+             type: :array,
+             aliases: "-i",
+             default: []
       option :output_file,
-        desc: "The output file path",
-        type: :string,
-        aliases: "-o"
+             desc: "The output file path",
+             type: :string,
+             aliases: "-o"
       option :namespace,
-        desc: "The I18n namespace",
-        type: :string,
-        aliases: "-n",
-        default: "I18n"
+             desc: "The I18n namespace",
+             type: :string,
+             aliases: "-n",
+             default: "I18n"
       option :require,
-        desc: "Location of Rails application with translations or file to require",
-        type: :string,
-        aliases: "-r",
-        banner: "[PATH|DIR]"
+             desc: "Location of Rails application with translations or file to require",
+             type: :string,
+             aliases: "-r",
+             banner: "[PATH|DIR]"
       option :gzip,
-        desc: "Also generate .gz file for the exported translation",
-        type: :boolean,
-        default: false
+             desc: "Also generate .gz file for the exported translation",
+             type: :boolean,
+             default: false
 
       def export
         validate_require_path!
@@ -59,39 +56,45 @@ module I18n
         validate_config_path!
         validate_output_path!
 
-        config =  if export_options[:config]
-                    YAML.load_file(export_options[:config])["translations"]
-                  else
-                    [{
-                      file: export_options[:output_file],
-                      only: export_options[:include],
-                      except: export_options[:exclude]
-                    }]
-                  end
-
-        config = config.map do |node|
-          node[:namespace] = export_options[:namespace]
-          node[:gzip] = export_options[:gzip]
-        end
-
         require export_options[:require]
-        I18n::JS::CLI::Exporter.export(config)
+        I18n::JS::CLI::Exporter.export(prepare_to_export)
         exit 0
       end
 
       private
 
+      def exporting_items
+        if export_options[:config]
+          YAML.load_file(export_options[:config])["translations"]
+        else
+          [{
+            file: export_options[:output_file],
+            only: export_options[:include]
+          }]
+        end
+      end
+
+      def prepare_to_export
+        exporting_items.map do |node|
+          node[:namespace] = export_options[:namespace]
+          node[:gzip] = export_options[:gzip]
+          hash_with_indifferent_access(node)
+        end
+      end
+
       def export_options
-        @export_options ||= Thor::CoreExt::HashWithIndifferentAccess.new({}.merge(options.dup))
+        @export_options ||= hash_with_indifferent_access({}.merge(options.dup))
       end
 
       def validate_config_option!
         if export_options[:config] && export_options[:include].any?
-          raise Error, "ERROR: --config and --include are mutually exclusive."
+          raise Error,
+            "ERROR: --config and --include are mutually exclusive."
         end
 
         if export_options[:config] && export_options[:output_file]
-          raise Error, "ERROR: --config and --output-file are mutually exclusive."
+          raise Error,
+            "ERROR: --config and --output-file are mutually exclusive."
         end
       end
 
@@ -114,12 +117,13 @@ module I18n
       def validate_config_path!
         return if export_options[:include].any?
 
-        config = export_options[:config] || "config/i18njs.yml"
-        export_options[:config] = File.expand_path(config)
+        config = File.expand_path(export_options[:config] || "config/i18njs.yml")
+        export_options[:config] = config
 
         return if File.file?(config)
 
-        raise Error, "ERROR: --config must be a valid file; #{export_options[:config]} used."
+        raise Error,
+              "ERROR: --config must be a valid file; #{config} used."
       end
 
       def validate_output_path!
@@ -127,6 +131,10 @@ module I18n
         return if export_options[:output_file]
 
         raise Error, "ERROR: --output-file must be provided."
+      end
+
+      def hash_with_indifferent_access(hash)
+        Thor::CoreExt::HashWithIndifferentAccess.new(hash)
       end
     end
   end

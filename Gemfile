@@ -1,7 +1,7 @@
-source 'https://rubygems.org'
+source "https://rubygems.org"
 gemspec
 
-gem "i18n-js", path: "~/Projects/i18n-js", branch: "experiment", require: false
+gem "i18n-js", path: "~/Projects/i18n-js", branch: "experiment"
 
 gem "rails", ">= 5.0.0.beta3", "< 5.1"
 gem "puma"
