@@ -5,15 +5,8 @@ class ExportTest < Minitest::Test
     Dir.chdir File.expand_path("../../../../..", __FILE__)
   end
 
-  test "requires output file" do
-    _, err, exitcode = run_cli("export")
-
-    assert_equal 1, exitcode
-    assert_includes err, "No value provided for required options '--output-file'"
-  end
-
   test "requires valid config file" do
-    _, err, exitcode = run_cli("export --require #{__FILE__} --config some-file.yml --output-file translations.js")
+    _, err, exitcode = run_cli("export --require #{__FILE__} --config some-file.yml")
 
     assert_equal 1, exitcode
     assert_includes err, "ERROR: --config must be a valid file; #{Dir.pwd}/some-file.yml used."
@@ -58,7 +51,7 @@ class ExportTest < Minitest::Test
     Dir.chdir "test/support/rails-app"
     I18n::JS::CLI::Exporter.expects(:export).with(kind_of(Array))
 
-    _, err, exitcode = run_cli("export --require . --output-file translations.js")
+    _, err, exitcode = run_cli("export --require .")
 
     assert_equal err, ""
     assert_equal 0, exitcode
@@ -67,17 +60,16 @@ class ExportTest < Minitest::Test
   test "accepts default configuration as --config" do
     I18n::JS::CLI::Exporter.expects(:export).with(kind_of(Array))
 
-    out, err, exitcode = run_cli("export --require test/support/rails-app --output-file translations.js")
-    p out
+    out, err, exitcode = run_cli("export --require test/support/rails-app")
+
     assert_equal err, ""
     assert_equal 0, exitcode
   end
 
   test "accepts ruby file as --require" do
-    Dir.chdir "test/support/rails-app"
     I18n::JS::CLI::Exporter.expects(:export).with(kind_of(Array))
 
-    _, err, exitcode = run_cli("export --require #{__FILE__} --output-file translations.js")
+    _, err, exitcode = run_cli("export --include * --require #{__FILE__} --output-file translations.js")
 
     assert_equal err, ""
     assert_equal 0, exitcode
@@ -87,7 +79,7 @@ class ExportTest < Minitest::Test
     I18n::JS::CLI::Exporter.expects(:export).with(kind_of(Array))
     dir = Dir.pwd
 
-    _, err, exitcode = run_cli("export --require test/support/rails-app --config #{dir}/test/support/configs/rails.yml --output-file translations.js")
+    _, err, exitcode = run_cli("export --require test/support/rails-app --config #{dir}/test/support/configs/rails.yml")
 
     assert_equal err, ""
     assert_equal 0, exitcode

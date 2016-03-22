@@ -37,8 +37,7 @@ module I18n
       option :output_file,
         desc: "The output file path",
         type: :string,
-        aliases: "-o",
-        required: true
+        aliases: "-o"
       option :namespace,
         desc: "The I18n namespace",
         type: :string,
@@ -58,6 +57,7 @@ module I18n
         validate_require_path!
         validate_config_option!
         validate_config_path!
+        validate_output_path!
 
         config =  if export_options[:config]
                     YAML.load_file(export_options[:config])["translations"]
@@ -89,6 +89,10 @@ module I18n
         if export_options[:config] && export_options[:include].any?
           raise Error, "ERROR: --config and --include are mutually exclusive."
         end
+
+        if export_options[:config] && export_options[:output_file]
+          raise Error, "ERROR: --config and --output-file are mutually exclusive."
+        end
       end
 
       def validate_require_path!
@@ -116,6 +120,13 @@ module I18n
         return if File.file?(config)
 
         raise Error, "ERROR: --config must be a valid file; #{export_options[:config]} used."
+      end
+
+      def validate_output_path!
+        return if export_options[:config] && File.file?(export_options[:config])
+        return if export_options[:output_file]
+
+        raise Error, "ERROR: --output-file must be provided."
       end
     end
   end
