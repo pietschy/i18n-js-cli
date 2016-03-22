@@ -42,6 +42,8 @@ The `export` command has several options.
 - `--config`: The config file that will be used to export files. This the YAML containing your rules.
 - `--gzip`: Also export a `.gz` version of your translation file.
 - `--include`: Specify the scopes you want to include. For several scopes, just do something like `--include '*.date.*' '*.time.*' '*.number.*'`.
+- `--module-name`: Use this option if you need to specify the namespace (`globals`) or the AMD's module name.
+- `--module`: Specify the module system that must be used. Can be one of `globals`, `amd` or `common`.
 - `--namespace`: You can use a different namespace for the translations. Useful when you can't use the global `I18n`.
 - `--output-file`: If you're not using a configuration file, you have to specify this option. It's the path of the output file. Existing file will be replaced.
 - `--require`: To load your translations, you have to specify a entry file that will be required.
